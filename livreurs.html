@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Livreurs</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            margin: 0;
+        }
+        .return-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: white;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .return-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+        }
+        .card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .card i {
+            font-size: 40px;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .card h3 {
+            font-size: 18px;
+            margin: 10px 0 0;
+            color: #333;
+        }
+        .wide-card {
+            width: 100%;
+            max-width: 850px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        form input, form button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        footer {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            position: relative;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestion des Livreurs</h1>
+        <button class="return-btn" onclick="retourAccueil()">Retour à l'accueil</button>
+    </header>
+
+    <div class="container">
+        <!-- Formulaire pour ajouter un livreur -->
+        <div class="card">
+            <i class="fas fa-truck"></i>
+            <h3>Ajouter un Livreur</h3>
+            <form id="addLivreurForm">
+                <input type="text" id="nomComplet" placeholder="Nom complet" required>
+                <input type="tel" id="numeroTelephone" placeholder="Numéro de téléphone" required>
+                <input type="number" id="nbCommandesLivrer" placeholder="Nombre de commandes à livrer" required>
+                <button type="submit">Ajouter</button>
+            </form>
+        </div>
+
+        <!-- Tableau pour afficher les livreurs -->
+        <div class="card wide-card">
+            <i class="fas fa-truck-loading"></i>
+            <h3>Liste des Livreurs</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom complet</th>
+                        <th>Numéro de téléphone</th>
+                        <th>Nombre de commandes à livrer</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="livreursTableBody">
+                    <!-- Les lignes des livreurs seront insérées ici -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>© BY Ayoub Mourfik. 2024 Gestion des Commandes. Tous droits réservés.</p>
+    </footer>
+
+    <script>
+        document.getElementById('addLivreurForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            ajouterLivreur();
+        });
+
+        function ajouterLivreur() {
+            const nomComplet = document.getElementById('nomComplet').value;
+            const numeroTelephone = document.getElementById('numeroTelephone').value;
+            const nbCommandesLivrer = document.getElementById('nbCommandesLivrer').value;
+
+            const livreur = { nomComplet, numeroTelephone, nbCommandesLivrer };
+
+            // Récupérer les livreurs existants du local storage
+            let livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+            livreurs.push(livreur);
+            localStorage.setItem('livreurs', JSON.stringify(livreurs));
+
+            afficherLivreurs();
+            document.getElementById('addLivreurForm').reset();
+        }
+
+        function afficherLivreurs() {
+            const livreursTableBody = document.getElementById('livreursTableBody');
+            livreursTableBody.innerHTML = '';
+            const livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+
+            livreurs.forEach((livreur, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${livreur.nomComplet}</td>
+                    <td>${livreur.numeroTelephone}</td>
+                    <td>${livreur.nbCommandesLivrer}</td>
+                    <td>
+                        <button class="edit-btn" onclick="modifierLivreur(${index})">Modifier</button>
+                        <button class="delete-btn" onclick="supprimerLivreur(${index})">Supprimer</button>
+                    </td>
+                `;
+                livreursTableBody.appendChild(row);
+            });
+        }
+
+        function modifierLivreur(index) {
+            const livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+            const livreur = livreurs[index];
+            document.getElementById('nomComplet').value = livreur.nomComplet;
+            document.getElementById('numeroTelephone').value = livreur.numeroTelephone;
+            document.getElementById('nbCommandesLivrer').value = livreur.nbCommandesLivrer;
+
+            livreurs.splice(index, 1);
+            localStorage.setItem('livreurs', JSON.stringify(livreurs));
+
+            afficherLivreurs();
+        }
+
+        function supprimerLivreur(index) {
+            let livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+            livreurs.splice(index, 1);
+            localStorage.setItem('livreurs', JSON.stringify(livreurs));
+            afficherLivreurs();
+        }
+
+        function retourAccueil() {
+            window.location.href = 'index.html'; // Remplace 'index.html' par le chemin de ton fichier d'accueil
+        }
+
+        // Afficher les livreurs au chargement de la page
+        window.onload = afficherLivreurs;
+    </script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Commandes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            position: relative; /* Pour placer le bouton retour */
+        }
+        header h1 {
+            margin: 0;
+        }
+        .return-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: white;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .return-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+        }
+        .card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .card i {
+            font-size: 40px;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .card h3 {
+            font-size: 18px;
+            margin: 10px 0 0;
+            color: #333;
+        }
+        .wide-card {
+            width: 100%;
+            max-width: 850px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        form input, form button, form select {
+            padding: 10px;
+            font-size: 16px;
+        }
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        footer {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            position: relative; /* Enlever fixed et utiliser relative */
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestion des Commandes</h1>
+        <button class="return-btn" onclick="retourAccueil()">Retour à l'accueil</button>
+    </header>
+
+    <div class="container">
+        <!-- Formulaire pour ajouter une commande -->
+        <div class="card">
+            <i class="fas fa-box"></i>
+            <h3>Ajouter une Commande</h3>
+            <form id="addCommandeForm">
+                <input type="text" id="nomProduit" placeholder="Nom du produit" required>
+                <input type="date" id="dateCommande" required>
+                <input type="date" id="dateLivraison" required>
+                <input type="text" id="villeDestinateur" placeholder="Ville du destinateur" required>
+                <input type="text" id="villeClient" placeholder="Ville du client" required>
+                <input type="text" id="livreur" placeholder="Livreur" required>
+                <input type="text" id="client" placeholder="Client" required>
+                <input type="text" id="destinateur" placeholder="Destinateur" required>
+                <button type="submit">Ajouter</button>
+            </form>
+        </div>
+
+        <!-- Tableau pour afficher les commandes -->
+        <div class="card wide-card">
+            <i class="fas fa-boxes"></i>
+            <h3>Liste des Commandes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Date de commande</th>
+                        <th>Date de livraison</th>
+                        <th>Ville (Destinateur)</th>
+                        <th>Ville (Client)</th>
+                        <th>Livreur</th>
+                        <th>Client</th>
+                        <th>Destinateur</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="commandesTableBody">
+                    <!-- Les lignes des commandes seront insérées ici -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>© BY Ayoub Mourfik. 2024 Gestion des Commandes. Tous droits réservés.</p>
+    </footer>
+
+    <script>
+        document.getElementById('addCommandeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            ajouterCommande();
+        });
+
+        function ajouterCommande() {
+            const nomProduit = document.getElementById('nomProduit').value;
+            const dateCommande = document.getElementById('dateCommande').value;
+            const dateLivraison = document.getElementById('dateLivraison').value;
+            const villeDestinateur = document.getElementById('villeDestinateur').value;
+            const villeClient = document.getElementById('villeClient').value;
+            const livreur = document.getElementById('livreur').value;
+            const client = document.getElementById('client').value;
+            const destinateur = document.getElementById('destinateur').value;
+
+            const commande = { nomProduit, dateCommande, dateLivraison, villeDestinateur, villeClient, livreur, client, destinateur };
+
+            // Récupérer les commandes existantes du local storage
+            let commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+            commandes.push(commande);
+            localStorage.setItem('commandes', JSON.stringify(commandes));
+
+            afficherCommandes();
+            document.getElementById('addCommandeForm').reset();
+        }
+
+        function afficherCommandes() {
+            const commandesTableBody = document.getElementById('commandesTableBody');
+            commandesTableBody.innerHTML = '';
+            const commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+
+            commandes.forEach((commande, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${commande.nomProduit}</td>
+                    <td>${commande.dateCommande}</td>
+                    <td>${commande.dateLivraison}</td>
+                    <td>${commande.villeDestinateur}</td>
+                    <td>${commande.villeClient}</td>
+                    <td>${commande.livreur}</td>
+                    <td>${commande.client}</td>
+                    <td>${commande.destinateur}</td>
+                    <td>
+                        <button class="edit-btn" onclick="modifierCommande(${index})">Modifier</button>
+                        <button class="delete-btn" onclick="supprimerCommande(${index})">Supprimer</button>
+                    </td>
+                `;
+                commandesTableBody.appendChild(row);
+            });
+        }
+
+        function modifierCommande(index) {
+            const commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+            const commande = commandes[index];
+            document.getElementById('nomProduit').value = commande.nomProduit;
+            document.getElementById('dateCommande').value = commande.dateCommande;
+            document.getElementById('dateLivraison').value = commande.dateLivraison;
+            document.getElementById('villeDestinateur').value = commande.villeDestinateur;
+            document.getElementById('villeClient').value = commande.villeClient;
+            document.getElementById('livreur').value = commande.livreur;
+            document.getElementById('client').value = commande.client;
+            document.getElementById('destinateur').value = commande.destinateur;
+
+            commandes.splice(index, 1);
+            localStorage.setItem('commandes', JSON.stringify(commandes));
+
+            afficherCommandes();
+        }
+
+        function supprimerCommande(index) {
+            let commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+            commandes.splice(index, 1);
+            localStorage.setItem('commandes', JSON.stringify(commandes));
+            afficherCommandes();
+        }
+
+        function retourAccueil() {
+            window.location.href = 'index.html'; // Remplace 'index.html' par le chemin de ton fichier d'accueil
+        }
+
+        // Afficher les commandes au chargement de la page
+        window.onload = afficherCommandes;
+    </script>
+</body>
+</html>
