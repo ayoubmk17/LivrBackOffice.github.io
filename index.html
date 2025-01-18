@@ -10,10 +10,11 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background: url('order_20processing_1848x970.webp') no-repeat center center fixed;
+            background-size: cover;
         }
         header {
-            background-color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.8);
             color: white;
             padding: 10px 20px;
             text-align: center;
@@ -30,7 +31,7 @@
             box-sizing: border-box;
         }
         .card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid #ddd;
             border-radius: 8px;
             flex: 1;
@@ -55,6 +56,12 @@
             margin: 10px 0 0;
             color: #333;
         }
+        .card p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
         @media (max-width: 600px) {
             .card {
                 width: 100%;
@@ -62,7 +69,7 @@
             }
         }
         footer {
-            background-color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.8);
             color: white;
             text-align: center;
             padding: 10px;
@@ -97,10 +104,49 @@
             <i class="fas fa-truck"></i>
             <h3>Livreurs</h3>
         </a>
+
+        <!-- Nouvelle carte pour les statistiques -->
+        <a href="statistics.html" class="card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Statistiques</h3>
+            <p id="totalClients">Clients: 0</p>
+            <p id="totalCommandes">Commandes: 0</p>
+            <p id="totalDestinateurs">Destinateurs: 0</p>
+            <p id="totalLivreurs">Livreurs: 0</p>
+        </a>
     </div>
 
     <footer>
         <p>© BY Ayoub Mourfik. 2024 Gestion des Commandes. Tous droits réservés.</p>
     </footer>
+
+    <script>
+        // Fonction pour récupérer les statistiques depuis le localStorage
+        function getStatistics() {
+            const clients = JSON.parse(localStorage.getItem('clients')) || [];
+            const commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+            const destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
+            const livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+
+            return {
+                totalClients: clients.length,
+                totalCommandes: commandes.length,
+                totalDestinateurs: destinateurs.length,
+                totalLivreurs: livreurs.length,
+            };
+        }
+
+        // Fonction pour mettre à jour la carte des statistiques
+        function updateStatisticsCard() {
+            const stats = getStatistics();
+            document.getElementById('totalClients').textContent = `Clients: ${stats.totalClients}`;
+            document.getElementById('totalCommandes').textContent = `Commandes: ${stats.totalCommandes}`;
+            document.getElementById('totalDestinateurs').textContent = `Destinateurs: ${stats.totalDestinateurs}`;
+            document.getElementById('totalLivreurs').textContent = `Livreurs: ${stats.totalLivreurs}`;
+        }
+
+        // Mettre à jour la carte des statistiques au chargement de la page
+        updateStatisticsCard();
+    </script>
 </body>
 </html>

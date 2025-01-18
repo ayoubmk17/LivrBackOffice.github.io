@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Livreurs</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js -->
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background: url('order_20processing_1848x970.webp') no-repeat center center fixed;
+            background-size: cover;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -171,6 +173,13 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Graphique des commandes livrées par livreur -->
+        <div class="card wide-card">
+            <i class="fas fa-chart-bar"></i>
+            <h3>Commandes Livrées par Livreur</h3>
+            <canvas id="commandesLivreesChart"></canvas>
+        </div>
     </div>
 
     <footer>
@@ -178,73 +187,125 @@
     </footer>
 
     <script>
-        document.getElementById('addLivreurForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            ajouterLivreur();
-        });
-
-        function ajouterLivreur() {
-            const nomComplet = document.getElementById('nomComplet').value;
-            const numeroTelephone = document.getElementById('numeroTelephone').value;
-            const nbCommandesLivrer = document.getElementById('nbCommandesLivrer').value;
-
-            const livreur = { nomComplet, numeroTelephone, nbCommandesLivrer };
-
-            // Récupérer les livreurs existants du local storage
-            let livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
-            livreurs.push(livreur);
-            localStorage.setItem('livreurs', JSON.stringify(livreurs));
-
-            afficherLivreurs();
-            document.getElementById('addLivreurForm').reset();
+        class Livreur {
+            constructor(nomComplet, numeroTelephone, nbCommandesLivrer) {
+                this.nomComplet = nomComplet;
+                this.numeroTelephone = numeroTelephone;
+                this.nbCommandesLivrer = nbCommandesLivrer;
+            }
         }
 
-        function afficherLivreurs() {
-            const livreursTableBody = document.getElementById('livreursTableBody');
-            livreursTableBody.innerHTML = '';
-            const livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+        class GestionLivreurs {
+            constructor() {
+                this.livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+                this.livreursTableBody = document.getElementById('livreursTableBody');
+                this.form = document.getElementById('addLivreurForm');
+                this.nomCompletInput = document.getElementById('nomComplet');
+                this.numeroTelephoneInput = document.getElementById('numeroTelephone');
+                this.nbCommandesLivrerInput = document.getElementById('nbCommandesLivrer');
+                this.init();
+            }
 
-            livreurs.forEach((livreur, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${livreur.nomComplet}</td>
-                    <td>${livreur.numeroTelephone}</td>
-                    <td>${livreur.nbCommandesLivrer}</td>
-                    <td>
-                        <button class="edit-btn" onclick="modifierLivreur(${index})">Modifier</button>
-                        <button class="delete-btn" onclick="supprimerLivreur(${index})">Supprimer</button>
-                    </td>
-                `;
-                livreursTableBody.appendChild(row);
-            });
+            init() {
+                this.form.addEventListener('submit', (e) => this.ajouterLivreur(e));
+                this.afficherLivreurs();
+                this.afficherGraphiqueCommandesLivrees();
+            }
+
+            ajouterLivreur(e) {
+                e.preventDefault();
+                const nomComplet = this.nomCompletInput.value;
+                const numeroTelephone = this.numeroTelephoneInput.value;
+                const nbCommandesLivrer = this.nbCommandesLivrerInput.value;
+
+                const livreur = new Livreur(nomComplet, numeroTelephone, nbCommandesLivrer);
+                this.livreurs.push(livreur);
+                this.mettreAJourLocalStorage();
+                this.afficherLivreurs();
+                this.afficherGraphiqueCommandesLivrees();
+                this.form.reset();
+            }
+
+            afficherLivreurs() {
+                this.livreursTableBody.innerHTML = '';
+                this.livreurs.forEach((livreur, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${livreur.nomComplet}</td>
+                        <td>${livreur.numeroTelephone}</td>
+                        <td>${livreur.nbCommandesLivrer}</td>
+                        <td>
+                            <button class="edit-btn" onclick="gestionLivreurs.modifierLivreur(${index})">Modifier</button>
+                            <button class="delete-btn" onclick="gestionLivreurs.supprimerLivreur(${index})">Supprimer</button>
+                        </td>
+                    `;
+                    this.livreursTableBody.appendChild(row);
+                });
+            }
+
+            modifierLivreur(index) {
+                const livreur = this.livreurs[index];
+                this.nomCompletInput.value = livreur.nomComplet;
+                this.numeroTelephoneInput.value = livreur.numeroTelephone;
+                this.nbCommandesLivrerInput.value = livreur.nbCommandesLivrer;
+
+                this.livreurs.splice(index, 1);
+                this.mettreAJourLocalStorage();
+                this.afficherLivreurs();
+                this.afficherGraphiqueCommandesLivrees();
+            }
+
+            supprimerLivreur(index) {
+                this.livreurs.splice(index, 1);
+                this.mettreAJourLocalStorage();
+                this.afficherLivreurs();
+                this.afficherGraphiqueCommandesLivrees();
+            }
+
+            mettreAJourLocalStorage() {
+                localStorage.setItem('livreurs', JSON.stringify(this.livreurs));
+            }
+
+            // Fonction pour afficher le graphique des commandes livrées par livreur
+            afficherGraphiqueCommandesLivrees() {
+                const commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+                const livreurs = this.livreurs;
+
+                // Compter le nombre de commandes livrées par livreur
+                const commandesParLivreur = livreurs.map(livreur => {
+                    return commandes.filter(commande => commande.livreur === livreur.nomComplet && new Date(commande.dateLivraison) <= new Date()).length;
+                });
+
+                const ctx = document.getElementById('commandesLivreesChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar', // Type de graphique (bar, line, pie, etc.)
+                    data: {
+                        labels: livreurs.map(livreur => livreur.nomComplet), // Noms des livreurs
+                        datasets: [{
+                            label: 'Commandes Livrées',
+                            data: commandesParLivreur, // Nombre de commandes livrées par livreur
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                        }],
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                            },
+                        },
+                    },
+                });
+            }
         }
 
-        function modifierLivreur(index) {
-            const livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
-            const livreur = livreurs[index];
-            document.getElementById('nomComplet').value = livreur.nomComplet;
-            document.getElementById('numeroTelephone').value = livreur.numeroTelephone;
-            document.getElementById('nbCommandesLivrer').value = livreur.nbCommandesLivrer;
-
-            livreurs.splice(index, 1);
-            localStorage.setItem('livreurs', JSON.stringify(livreurs));
-
-            afficherLivreurs();
-        }
-
-        function supprimerLivreur(index) {
-            let livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
-            livreurs.splice(index, 1);
-            localStorage.setItem('livreurs', JSON.stringify(livreurs));
-            afficherLivreurs();
-        }
+        // Initialisation de la gestion des livreurs
+        const gestionLivreurs = new GestionLivreurs();
 
         function retourAccueil() {
-            window.location.href = 'index.html'; // Remplace 'index.html' par le chemin de ton fichier d'accueil
+            window.location.href = 'index.html';
         }
-
-        // Afficher les livreurs au chargement de la page
-        window.onload = afficherLivreurs;
     </script>
 </body>
 </html>

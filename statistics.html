@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques - Gestion des Commandes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('order_20processing_1848x970.webp') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: rgba(76, 175, 80, 0.8);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            margin: 0;
+        }
+        .return-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: white;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .return-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .card h3 {
+            font-size: 24px;
+            margin: 10px 0 20px;
+            color: #333;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+        .stat-item {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-item h4 {
+            margin: 0;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        .stat-item p {
+            margin: 10px 0 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        footer {
+            background-color: rgba(76, 175, 80, 0.8);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            position: relative;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Statistiques</h1>
+        <button class="return-btn" onclick="retourAccueil()">Retour à l'accueil</button>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h3>Statistiques Générales</h3>
+            <div class="stats-grid" id="statsGrid">
+                <!-- Les statistiques seront insérées ici dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Graphique -->
+        <div class="card">
+            <h3>Graphique des Commandes</h3>
+            <canvas id="commandesChart"></canvas>
+        </div>
+    </div>
+
+    <footer>
+        <p>© BY Ayoub Mourfik. 2024 Gestion des Commandes. Tous droits réservés.</p>
+    </footer>
+
+    <script>
+        // Fonction pour récupérer les données du localStorage
+        function getStatistics() {
+            const clients = JSON.parse(localStorage.getItem('clients')) || [];
+            const commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+            const destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
+            const livreurs = JSON.parse(localStorage.getItem('livreurs')) || [];
+
+            return {
+                totalClients: clients.length,
+                totalCommandes: commandes.length,
+                totalDestinateurs: destinateurs.length,
+                totalLivreurs: livreurs.length,
+                commandesEnCours: commandes.filter(cmd => new Date(cmd.dateLivraison) > new Date()).length,
+                commandesLivrees: commandes.filter(cmd => new Date(cmd.dateLivraison) <= new Date()).length,
+            };
+        }
+
+        // Fonction pour afficher les statistiques
+        function afficherStatistiques() {
+            const stats = getStatistics();
+            const statsGrid = document.getElementById('statsGrid');
+
+            const statsData = [
+                { title: "Clients", value: stats.totalClients },
+                { title: "Commandes", value: stats.totalCommandes },
+                { title: "Destinateurs", value: stats.totalDestinateurs },
+                { title: "Livreurs", value: stats.totalLivreurs },
+                { title: "Commandes en cours", value: stats.commandesEnCours },
+                { title: "Commandes livrées", value: stats.commandesLivrees },
+            ];
+
+            statsGrid.innerHTML = statsData
+                .map(
+                    (stat) => `
+                    <div class="stat-item">
+                        <h4>${stat.title}</h4>
+                        <p>${stat.value}</p>
+                    </div>
+                `
+                )
+                .join("");
+        }
+
+        // Fonction pour créer le graphique
+        function creerGraphique() {
+            const stats = getStatistics();
+            const ctx = document.getElementById('commandesChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar', // Type de graphique (bar, line, pie, etc.)
+                data: {
+                    labels: ['Clients', 'Commandes', 'Destinateurs', 'Livreurs', 'Commandes en cours', 'Commandes livrées'],
+                    datasets: [{
+                        label: 'Statistiques',
+                        data: [
+                            stats.totalClients,
+                            stats.totalCommandes,
+                            stats.totalDestinateurs,
+                            stats.totalLivreurs,
+                            stats.commandesEnCours,
+                            stats.commandesLivrees,
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(75, 192, 192, 1)',
+                        ],
+                        borderWidth: 1,
+                    }],
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+        }
+
+        // Afficher les statistiques et le graphique au chargement de la page
+        afficherStatistiques();
+        creerGraphique();
+
+        // Fonction pour retourner à l'accueil
+        function retourAccueil() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

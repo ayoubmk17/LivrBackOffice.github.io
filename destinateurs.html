@@ -6,12 +6,17 @@
     <title>Gestion des Destinateurs</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
+      body
+    {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: url('order_20processing_1848x970.webp') no-repeat center center fixed;
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
         header {
             background-color: #4CAF50;
             color: white;
@@ -48,7 +53,7 @@
             padding: 20px;
         }
         .card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid #ddd;
             border-radius: 8px;
             width: 400px;
@@ -170,73 +175,103 @@
     </footer>
 
     <script>
-        document.getElementById('addDestinateurForm').addEventListener('submit', function(e) {
+       class Destinateur {
+    constructor(nomComplet, telephone, ville) {
+        this.nomComplet = nomComplet;
+        this.telephone = telephone;
+        this.ville = ville;
+    }
+}
+
+class GestionDestinateurs {
+    constructor() {
+        this.destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
+        this.destinateursTableBody = document.getElementById('destinateursTableBody');
+        this.addDestinateurForm = document.getElementById('addDestinateurForm');
+        this.init();
+    }
+
+    init() {
+        // Charger les destinateurs existants
+        this.afficherDestinateurs();
+
+        // Gérer l'ajout de destinateurs
+        this.addDestinateurForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            ajouterDestinateur();
+            this.ajouterDestinateur();
         });
+    }
 
-        function ajouterDestinateur() {
-            const nomComplet = document.getElementById('nomComplet').value;
-            const telephone = document.getElementById('telephone').value;
-            const ville = document.getElementById('ville').value;
+    ajouterDestinateur() {
+        // Récupérer les données du formulaire
+        const nomComplet = document.getElementById('nomComplet').value;
+        const telephone = document.getElementById('telephone').value;
+        const ville = document.getElementById('ville').value;
 
-            const destinateur = { nomComplet, telephone, ville };
+        // Créer un nouvel objet Destinateur
+        const nouveauDestinateur = new Destinateur(nomComplet, telephone, ville);
 
-            // Récupérer les destinateurs existants du local storage
-            let destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
-            destinateurs.push(destinateur);
-            localStorage.setItem('destinateurs', JSON.stringify(destinateurs));
+        // Ajouter le destinateur à la liste
+        this.destinateurs.push(nouveauDestinateur);
+        this.sauvegarderDestinateurs();
+        this.afficherDestinateurs();
 
-            afficherDestinateurs();
-            document.getElementById('addDestinateurForm').reset();
-        }
+        // Réinitialiser le formulaire
+        this.addDestinateurForm.reset();
+    }
 
-        function afficherDestinateurs() {
-            const destinateursTableBody = document.getElementById('destinateursTableBody');
-            destinateursTableBody.innerHTML = '';
-            const destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
+    modifierDestinateur(index) {
+        // Charger les données dans le formulaire
+        const destinateur = this.destinateurs[index];
+        document.getElementById('nomComplet').value = destinateur.nomComplet;
+        document.getElementById('telephone').value = destinateur.telephone;
+        document.getElementById('ville').value = destinateur.ville;
 
-            destinateurs.forEach((destinateur, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${destinateur.nomComplet}</td>
-                    <td>${destinateur.telephone}</td>
-                    <td>${destinateur.ville}</td>
-                    <td>
-                        <button class="edit-btn" onclick="modifierDestinateur(${index})">Modifier</button>
-                        <button class="delete-btn" onclick="supprimerDestinateur(${index})">Supprimer</button>
-                    </td>
-                `;
-                destinateursTableBody.appendChild(row);
-            });
-        }
+        // Supprimer le destinateur de la liste
+        this.destinateurs.splice(index, 1);
+        this.sauvegarderDestinateurs();
+        this.afficherDestinateurs();
+    }
 
-        function modifierDestinateur(index) {
-            const destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
-            const destinateur = destinateurs[index];
-            document.getElementById('nomComplet').value = destinateur.nomComplet;
-            document.getElementById('telephone').value = destinateur.telephone;
-            document.getElementById('ville').value = destinateur.ville;
+    supprimerDestinateur(index) {
+        // Supprimer le destinateur de la liste
+        this.destinateurs.splice(index, 1);
+        this.sauvegarderDestinateurs();
+        this.afficherDestinateurs();
+    }
 
-            destinateurs.splice(index, 1);
-            localStorage.setItem('destinateurs', JSON.stringify(destinateurs));
+    afficherDestinateurs() {
+        // Réinitialiser le tableau
+        this.destinateursTableBody.innerHTML = '';
 
-            afficherDestinateurs();
-        }
+        // Afficher chaque destinateur
+        this.destinateurs.forEach((destinateur, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${destinateur.nomComplet}</td>
+                <td>${destinateur.telephone}</td>
+                <td>${destinateur.ville}</td>
+                <td>
+                    <button class="edit-btn" onclick="gestionDestinateurs.modifierDestinateur(${index})">Modifier</button>
+                    <button class="delete-btn" onclick="gestionDestinateurs.supprimerDestinateur(${index})">Supprimer</button>
+                </td>
+            `;
+            this.destinateursTableBody.appendChild(row);
+        });
+    }
 
-        function supprimerDestinateur(index) {
-            let destinateurs = JSON.parse(localStorage.getItem('destinateurs')) || [];
-            destinateurs.splice(index, 1);
-            localStorage.setItem('destinateurs', JSON.stringify(destinateurs));
-            afficherDestinateurs();
-        }
+    sauvegarderDestinateurs() {
+        // Sauvegarder la liste dans le localStorage
+        localStorage.setItem('destinateurs', JSON.stringify(this.destinateurs));
+    }
+}
 
-        function retourAccueil() {
-            window.location.href = 'index.html'; // Remplace 'index.html' par le chemin de ton fichier d'accueil
-        }
+// Initialiser la gestion des destinateurs
+const gestionDestinateurs = new GestionDestinateurs();
 
-        // Afficher les destinateurs au chargement de la page
-        window.onload = afficherDestinateurs;
+function retourAccueil() {
+    window.location.href = 'index.html'; // Mettez le chemin correct ici
+}
     </script>
 </body>
 </html>

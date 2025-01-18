@@ -10,7 +10,8 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background: url('order_20processing_1848x970.webp') no-repeat center center fixed;
+            background-size: auto;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -52,7 +53,7 @@
             flex: 1;
         }
         .card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid #ddd;
             border-radius: 8px;
             width: 400px;
@@ -178,73 +179,103 @@
     </footer>
 
     <script>
-        document.getElementById('addClientForm').addEventListener('submit', function(e) {
+      class Client {
+    constructor(nomComplet, numeroTelephone, ville) {
+        this.nomComplet = nomComplet;
+        this.numeroTelephone = numeroTelephone;
+        this.ville = ville;
+    }
+}
+
+class GestionClients {
+    constructor() {
+        this.clients = JSON.parse(localStorage.getItem('clients')) || [];
+        this.clientsTableBody = document.getElementById('clientsTableBody');
+        this.addClientForm = document.getElementById('addClientForm');
+        this.init();
+    }
+
+    init() {
+        // Charger les clients existants
+        this.afficherClients();
+
+        // Ajouter un écouteur pour le formulaire d'ajout
+        this.addClientForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            ajouterClient();
+            this.ajouterClient();
         });
+    }
 
-        function ajouterClient() {
-            const nomComplet = document.getElementById('nomComplet').value;
-            const numeroTelephone = document.getElementById('numeroTelephone').value;
-            const ville = document.getElementById('ville').value;
+    ajouterClient() {
+        // Récupérer les valeurs du formulaire
+        const nomComplet = document.getElementById('nomComplet').value;
+        const numeroTelephone = document.getElementById('numeroTelephone').value;
+        const ville = document.getElementById('ville').value;
 
-            const client = { nomComplet, numeroTelephone, ville };
+        // Créer un nouvel objet Client
+        const nouveauClient = new Client(nomComplet, numeroTelephone, ville);
 
-            // Récupérer les clients existants du local storage
-            let clients = JSON.parse(localStorage.getItem('clients')) || [];
-            clients.push(client);
-            localStorage.setItem('clients', JSON.stringify(clients));
+        // Ajouter le client à la liste
+        this.clients.push(nouveauClient);
+        this.sauvegarderClients();
+        this.afficherClients();
 
-            afficherClients();
-            document.getElementById('addClientForm').reset();
-        }
+        // Réinitialiser le formulaire
+        this.addClientForm.reset();
+    }
 
-        function afficherClients() {
-            const clientsTableBody = document.getElementById('clientsTableBody');
-            clientsTableBody.innerHTML = '';
-            const clients = JSON.parse(localStorage.getItem('clients')) || [];
+    modifierClient(index) {
+        // Charger les données du client dans le formulaire
+        const client = this.clients[index];
+        document.getElementById('nomComplet').value = client.nomComplet;
+        document.getElementById('numeroTelephone').value = client.numeroTelephone;
+        document.getElementById('ville').value = client.ville;
 
-            clients.forEach((client, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${client.nomComplet}</td>
-                    <td>${client.numeroTelephone}</td>
-                    <td>${client.ville}</td>
-                    <td>
-                        <button class="edit-btn" onclick="modifierClient(${index})">Modifier</button>
-                        <button class="delete-btn" onclick="supprimerClient(${index})">Supprimer</button>
-                    </td>
-                `;
-                clientsTableBody.appendChild(row);
-            });
-        }
+        // Supprimer le client de la liste
+        this.clients.splice(index, 1);
+        this.sauvegarderClients();
+        this.afficherClients();
+    }
 
-        function modifierClient(index) {
-            const clients = JSON.parse(localStorage.getItem('clients')) || [];
-            const client = clients[index];
-            document.getElementById('nomComplet').value = client.nomComplet;
-            document.getElementById('numeroTelephone').value = client.numeroTelephone;
-            document.getElementById('ville').value = client.ville;
+    supprimerClient(index) {
+        // Supprimer le client de la liste
+        this.clients.splice(index, 1);
+        this.sauvegarderClients();
+        this.afficherClients();
+    }
 
-            clients.splice(index, 1);
-            localStorage.setItem('clients', JSON.stringify(clients));
+    afficherClients() {
+        // Effacer le tableau avant de l'actualiser
+        this.clientsTableBody.innerHTML = '';
 
-            afficherClients();
-        }
+        // Parcourir et afficher chaque client
+        this.clients.forEach((client, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${client.nomComplet}</td>
+                <td>${client.numeroTelephone}</td>
+                <td>${client.ville}</td>
+                <td>
+                    <button class="edit-btn" onclick="gestionClients.modifierClient(${index})">Modifier</button>
+                    <button class="delete-btn" onclick="gestionClients.supprimerClient(${index})">Supprimer</button>
+                </td>
+            `;
+            this.clientsTableBody.appendChild(row);
+        });
+    }
 
-        function supprimerClient(index) {
-            let clients = JSON.parse(localStorage.getItem('clients')) || [];
-            clients.splice(index, 1);
-            localStorage.setItem('clients', JSON.stringify(clients));
-            afficherClients();
-        }
+    sauvegarderClients() {
+        // Sauvegarder la liste des clients dans le localStorage
+        localStorage.setItem('clients', JSON.stringify(this.clients));
+    }
+}
 
-        function retourAccueil() {
-            window.location.href = 'index.html'; // Remplace 'index.html' par le chemin de ton fichier d'accueil
-        }
+// Initialiser la gestion des clients au chargement de la page
+const gestionClients = new GestionClients();
 
-        // Afficher les clients au chargement de la page
-        window.onload = afficherClients;
+function retourAccueil() {
+    window.location.href = 'index.html'; // Mettez le chemin correct ici
+}
     </script>
 </body>
 </html>
